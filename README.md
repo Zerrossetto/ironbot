@@ -1,2 +1,2 @@
 # ironbot
-A simple Discord utility bot for MapleRoyals Maple Story server
+A simple (unofficial) Discord utility bot for MapleStory MapleRoyal server
