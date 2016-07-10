@@ -13,6 +13,7 @@ hidden_street = HiddenStreet()
 
 
 def bind_to(bot):
+    """Binds basic IronBot commands to a bot instance"""
 
     @bot.event
     @asyncio.coroutine
