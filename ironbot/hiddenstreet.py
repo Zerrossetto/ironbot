@@ -4,6 +4,7 @@ import asyncio
 import logging.config
 import os
 import aiohttp
+import itertools
 from typing import Optional
 from bs4 import BeautifulSoup
 import peewee
@@ -447,10 +448,10 @@ class HiddenStreet:
                           for lvl in MonsterLevelType])
         finished, pending = loop.run_until_complete(f)
 
-        cats_pages = []
-        for last_page, category in [task.result() for task in finished]:
-            for i in range(last_page + 1):
-                    cats_pages.append((category, i))
+        cats_pages = [itertools.product((category,), range(0, last_page + 1))
+                      for last_page, category in
+                      map(lambda task: task.result(), finished)]
+        cats_pages = tuple(itertools.chain.from_iterable(cats_pages))
 
         log.debug(cats_pages)
         # f = asyncio.wait([HiddenStreet.scrape(semaphore=semaphore,
@@ -480,11 +481,6 @@ class HiddenStreet:
             Weapon.delete().execute()
         if Monster.select().count() > 0:
             Monster.delete().execute()
-        # lvl = MonsterLevelType.LEVEL_21_TO_30
-        # f = asyncio.wait([HiddenStreet.scrape(semaphore=semaphore,
-        #                                       section=Section.MONSTER,
-        #                                       subsection=lvl,
-        #                                       model=Monster)])
 
         with self.db.atomic():
             for result, category in [task.result() for task in finished]:
@@ -496,11 +492,6 @@ class HiddenStreet:
                 if len(result) == 0:
                     log.warn('empty result set for '
                              '{} category'.format(category))
-
-        # query = Weapon.select(Weapon.weapon_type) \
-        #               .group_by(Weapon.weapon_type)
-        # print([weapon.weapon_type for weapon in query.execute()])
-        # print([m.name for m in Monster.select(Monster.name).execute()])
 
         self.db_refreshing = False
         log.info('refreshing data... done')
