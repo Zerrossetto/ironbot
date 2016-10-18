@@ -10,7 +10,7 @@ def main():
     client = Bot(command_prefix=conf['default']['command_prefix'],
                  description=conf['default']['description'])
     ironbot.commands.bind_to(client)
-    client.run(os.environ['DISCORD_TOKEN'])
+    client.run(os.getenv('DISCORD_TOKEN'))
 
 if __name__ == '__main__':
     main()

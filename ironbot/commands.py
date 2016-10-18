@@ -3,6 +3,8 @@ import asyncio
 import logging
 import logging.config
 import os
+from pytz import utc, timezone
+from datetime import datetime, timedelta
 from .hiddenstreet import HiddenStreet
 
 logging.config.fileConfig(os.path.join('ironbot', 'logger.conf'),
@@ -10,6 +12,12 @@ logging.config.fileConfig(os.path.join('ironbot', 'logger.conf'),
 log = logging.getLogger('ironbot')
 
 hidden_street = HiddenStreet()
+server_start = None
+
+
+def is_admin(ctx):
+    author = ctx.message.author
+    return ctx.message.channel.permissions_for(author).administrator
 
 
 def bind_to(bot):
@@ -50,12 +58,6 @@ def bind_to(bot):
         else:
             for i in range(times):
                 yield from bot.say(' '.join(content))
-
-    # @bot.command()
-    # @asyncio.coroutine
-    # def joined(member: discord.Member):
-    #     """Says when a member joined."""
-    #     yield from bot.say('{0.name} joined in {0.joined_at}'.format(member))
 
     @bot.group(pass_context=True)
     @asyncio.coroutine
@@ -113,3 +115,89 @@ concession from http://bbb.hidden-street.net/"""
                 if monster.image_url:
                     message += '\n{}'.format(monster.image_url)
                 yield from bot.say(message)
+
+    @bot.command()
+    @asyncio.coroutine
+    def pierre():
+        """Shows the next respawn time for Pierre."""
+
+        global server_start
+
+        if server_start is None:
+            yield from bot.say('Server start date is still not set. '
+                               'Use **!set-server-start** command first')
+            return
+
+        now = utc.localize(datetime.utcnow(), is_dst=True)
+        req_intv = now - server_start
+        next_spawn = timedelta(0, 14400 - (req_intv.total_seconds() % 14400))
+        t = next_spawn.total_seconds()
+        f = '**Pierre will respawn in approximately** {:.0f} hours, ' \
+            '{:.0f} minutes and {:.0f} seconds'
+        yield from bot.say(f.format(t // 3600, t % 3600 // 60, t % 60))
+
+    @bot.command()
+    @asyncio.coroutine
+    def event():
+        """A quick Halloween Event guide for the lazy Mapler"""
+        yield from bot.say('**MapleRoyals Halloween Event 2016**\n'
+                           '*October 15th ~ November 15th*\n\n'
+                           '**Quick Guide:** https://mapleroyals.com/'
+                           'forum/threads/pierre-the-clown.80732/\n\n'
+                           'http://i.imgur.com/vTO05be.png')
+
+    @bot.command(name='set-server-start', pass_context=True)
+    @asyncio.coroutine
+    def set_server_uptime(ctx,
+                          server_date_str: str=None,
+                          server_time_str: str=None,
+                          uptime_str: str=None):
+        """Sets the time reference for server start.\n
+    Syntax: !set-server-start <server start YYYY-MM-DD HH:MM:SS> \
+    <uptime DD:HH:MM:SS>\n
+    Example: !set-server-start 2016-10-19 22:35:01 1:12:56:21"""
+
+        global server_start
+
+        if not is_admin(ctx):
+            yield from bot.say('Sorry, you should be an admin to '
+                               'use this command')
+            return
+
+        if server_date_str is None or \
+            server_time_str is None or \
+                uptime_str is None:
+            yield from bot.say('Command parameters are missing \n'
+                               'Example: *!set-server-start* 2016-10-19 '
+                               '22:35:01 1:12:56:21')
+            return
+
+        sampling = None
+        uptime = None
+        fmt = '%Y-%m-%d %H:%M:%S'
+        server_time_str = "{} {}".format(server_date_str, server_time_str)
+        try:
+            london = timezone('Europe/London')
+            sampling = london.localize(datetime.strptime(server_time_str, fmt),
+                                       is_dst=False)
+        except ValueError:
+            yield from bot.say('Error while parsing server time date "{:s}".\n'
+                               'Format should be YYYY-MM-DD '
+                               'HH:MM:SS'.format(server_time_str))
+            return
+
+        try:
+            uptime = [int(s) for s in uptime_str.split(':')]
+            if len(uptime) != 4:
+                raise ValueError
+        except ValueError:
+            yield from bot.say('Error while parsing uptime '
+                               'interval "{:s}". \nFormat should '
+                               'be DD:HH:MM:SS'.format(uptime_str))
+            return
+
+        uptime = timedelta(days=uptime[0], hours=uptime[1],
+                           minutes=uptime[2], seconds=uptime[3])
+        server_start = sampling - uptime
+        yield from bot.say('{:s} was set as '
+                           'server start'.format(server_start.strftime(fmt)))
