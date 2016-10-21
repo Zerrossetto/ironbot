@@ -76,7 +76,7 @@ concession from http://bbb.hidden-street.net/"""
                     message += '\n{}'.format(monster.image_url)
                 yield from self.b.say(message)
 
-    @command(name='set-server-start', pass_context=True)
+    @command(name='set-server-start')
     @check(checks.is_admin)
     @asyncio.coroutine
     def set_server_uptime(self, server_date: str = None, server_time: str = None, uptime: str = None):
