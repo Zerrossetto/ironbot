@@ -1,4 +1,4 @@
-aiohttp==1.0.3
+aiohttp==1.0.5
 beautifulsoup4==4.5.1
 chardet==2.3.0
 discord.py==0.13.0

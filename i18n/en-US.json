@@ -1,0 +1,18 @@
+{
+  "error.set-server-start.pvt": "You can't run this command as a private message",
+  "error.set-server-start.pub": "You must be admin to run this command",
+  "on_ready.welcome": "logged in as \"{bot.user.name}\" with app ID {bot.user.id}",
+  "roll.wrong format": "Format has to be in NdN!",
+  "repeat.no way": "No way I'm repeating it that many times",
+  "cool.yes": "Yes, the bot is cool.",
+  "cool.no": "No, {0.subcommand_passed} is not cool",
+  "monster_stats.no results": "No result for keyword \"{}\"",
+  "monster_stats.too many": "'Too many results! Right now I'm getting \"{}\"",
+  "monster_stats.result": "***{name}***\n**Level** {level} **EXP** {experience}**HP** {health_points}\n**Elemental weakness** {weakness_to_magic}\n**Elemental resistance** {resistance_to_magic}\n{link}",
+  "set-server-start.missing params": "Command parameters are missing \nExample: *!set-server-start* 2016-10-19 22:35:01 1:12:56:21",
+  "set-server-start.parsing datetime": "Error while parsing server time date \"{:s}\".\nFormat should be YYYY-MM-DD HH:MM:SS",
+  "set-server-start.parsing uptime": "Error while parsing uptime interval \"{:s}\". \nFormat should be DD:HH:MM:SS",
+  "set-server-start.done": "{:s} was set as server start",
+  "pierre.date not set": "Server start date is still not set. Use **{command_prefix}set-server-start** command first",
+  "pierre.respawn": "**Pierre will respawn in approximately** {:.0f} hours, {:.0f} minutes and {:.0f} seconds"
+}
