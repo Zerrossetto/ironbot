@@ -99,8 +99,6 @@ concession from http://bbb.hidden-street.net/"""
 
         try:
             d, h, m, s = [int(s) for s in uptime.split(':')]
-            if not all((d, h, m, s)):
-                raise ValueError
         except ValueError:
             yield from self.b.say(msg('set-server-start.parsing uptime').format(uptime))
             return

@@ -5,7 +5,7 @@ from typing import Generic
 
 handled = {
     (CheckFailure, PrivateChannel, 'set-server-start'): 'error.set-server-start.pvt',
-    (CheckFailure, Channel, 'set-server-start'): 'error.set-server-start.pvt'
+    (CheckFailure, Channel, 'set-server-start'): 'error.set-server-start.pub'
 }
 
 
