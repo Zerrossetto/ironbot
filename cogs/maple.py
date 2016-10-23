@@ -41,6 +41,7 @@ class Maple:
 
     def __init__(self, bot: Bot):
         self.b = bot
+        self.scheduled_jobs = []
         self.hiddenstreet = HiddenStreet(bot.loop)
         if settings.SET_SERVER_START_DEFAULT is not None:
             bot.loop.create_task(self._init_server_start())
@@ -65,8 +66,11 @@ class Maple:
 
         if first_run:
             schedule_log.info('First run, now rescheduling for next four hours')
-            schedule.every(4).hours.do(self.pierre_alert_job)
+            job = schedule.every(4).hours.do(self.pierre_alert_job, first_run=False)
+            self.scheduled_jobs.append(job)
             return schedule.CancelJob
+        else:
+            schedule_log.info('Standard run, terminating normally')
 
     def pierre_next_respawn(self) -> timedelta:
         now = utc.localize(datetime.utcnow(), is_dst=True)
@@ -184,7 +188,9 @@ concession from http://bbb.hidden-street.net/"""
 
         # Scheduling jobs for automatic Pierre notifications
         # this is done every time the server time is being adjusted
-        schedule.clear()
+        for job in self.scheduled_jobs:
+            schedule.cancel_job(job)
+        self.scheduled_jobs.clear()
         remaining_respawn_time = self.pierre_next_respawn()
 
         for interval in (timedelta(minutes=30), timedelta(minutes=20),
@@ -193,7 +199,8 @@ concession from http://bbb.hidden-street.net/"""
                 t = (remaining_respawn_time - interval).total_seconds()
             else:
                 t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
-            schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
+            job = schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
+            self.scheduled_jobs.append(job)
 
 
 def setup(bot: Bot) -> None:
