@@ -1,15 +1,39 @@
+import aiohttp
 import asyncio
 import logging
+import schedule
 import settings
 from datetime import datetime, timedelta
+from discord import ChannelType
 from discord.ext.commands import Bot, command, check
 from pytz import utc, timezone
 from commons import checks
 from commons.messages import get as msg
+from commons.errors import catch_exceptions
 from crawlers.hiddenstreet import HiddenStreet
 
 
 log = logging.getLogger(settings.LOGGER_IRONBOT)
+schedule_log = logging.getLogger(settings.LOGGER_SCHEDULER)
+
+
+def format_pierre_interval(hours: int, minutes: int, seconds: int) -> str:
+    hours, minutes, seconds = [int(round(n)) for n in (hours, minutes, seconds)]
+    if seconds == 60:
+        minutes += 1
+        seconds = 0
+    if minutes == 60:
+        hours += 1
+        minutes = 0
+    suffix = ''.join([n for n, t in (('h', hours), ('m', minutes), ('s', seconds)) if t > 0])
+    fmt = msg('pierre.respawn.{}'.format(suffix))
+    data = dict(h_time=hours,
+                hour=msg('time.hours' if hours > 1 else 'time.hour'),
+                m_time=minutes,
+                minute=msg('time.minutes' if minutes > 1 else 'time.minute'),
+                s_time=seconds,
+                second=msg('time.seconds' if seconds > 1 else 'time.second'))
+    return fmt.format(**data)
 
 
 class Maple:
@@ -17,8 +41,58 @@ class Maple:
 
     def __init__(self, bot: Bot):
         self.b = bot
-        self.hiddenstreet = HiddenStreet()
-        self.server_start = None
+        # self.hiddenstreet = HiddenStreet()
+        if settings.SET_SERVER_START_DEFAULT is not None:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self._init_server_start())
+            remaining_respawn_time = self.pierre_next_respawn()
+
+            for interval in (timedelta(minutes=30), timedelta(minutes=20),
+                             timedelta(minutes=10), timedelta(minutes=5)):
+                if remaining_respawn_time > interval:
+                    t = (remaining_respawn_time - interval).total_seconds()
+                else:
+                    t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
+                schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
+
+        else:
+            self.server_start = None
+
+
+    @catch_exceptions
+    def pierre_alert_job(self, first_run=False):
+
+        assert not self.b.is_closed or self.b.is_logged_in, 'Connection to host is closed, skipping execution'
+        assert self.server_start is not None, 'Server start is not currently set'
+
+        t = self.pierre_next_respawn().total_seconds()
+
+        for destination in [server.default_channel
+                            for server in self.b.servers
+                            if server.default_channel.type == ChannelType.text]:
+            message = format_pierre_interval(t // 3600, t % 3600 // 60, t % 60)
+            self.b.loop.create_task(self.b.send_message(destination, message))
+            schedule_log.info('Pierre alert sent to channel {}: {}'.format(destination.name, message))
+
+        if first_run:
+            schedule_log.info('First run, now rescheduling for next four hours')
+            schedule.every(4).hours.do(self.pierre_alert_job)
+            return schedule.CancelJob
+
+    def pierre_next_respawn(self) -> timedelta:
+        now = utc.localize(datetime.utcnow(), is_dst=True)
+        req_interval = now - self.server_start
+        return timedelta(0, 14400 - (req_interval.total_seconds() % 14400))
+
+    @asyncio.coroutine
+    def _init_server_start(self):
+        with aiohttp.ClientSession() as client:
+            response = yield from client.get(settings.SET_SERVER_START_DEFAULT)
+            args = yield from response.text()
+            args = args.rstrip()
+            log.info('init_server_start: Gotten "{:s}" as default arguments'.format(args))
+
+        yield from self.set_server_uptime.callback(self, *args.split())
 
     @command()
     @asyncio.coroutine
@@ -39,11 +113,8 @@ class Maple:
             yield from self.b.say(msg('pierre.date not set').format(**settings.BOT))
             return
 
-        now = utc.localize(datetime.utcnow(), is_dst=True)
-        req_intv = now - self.server_start
-        next_spawn = timedelta(0, 14400 - (req_intv.total_seconds() % 14400))
-        t = next_spawn.total_seconds()
-        yield from self.b.say(msg('pierre.respawn').format(t // 3600, t % 3600 // 60, t % 60))
+        t = self.pierre_next_respawn().total_seconds()
+        yield from self.b.say(format_pierre_interval(t // 3600, t % 3600 // 60, t % 60))
 
     @command(name='mobstats')
     @asyncio.coroutine
@@ -76,7 +147,7 @@ concession from http://bbb.hidden-street.net/"""
                     message += '\n{}'.format(monster.image_url)
                 yield from self.b.say(message)
 
-    @command(name='set-server-start')
+    @command(name='set-server-start', hidden=True)
     @check(checks.is_admin)
     @asyncio.coroutine
     def set_server_uptime(self, server_date: str = None, server_time: str = None, uptime: str = None):
@@ -85,7 +156,10 @@ concession from http://bbb.hidden-street.net/"""
         Example: !set-server-start 2016-10-19 22:35:01 1:12:56:21"""
 
         if not all((server_date, server_time, uptime)):
-            yield from self.b.say(msg('set-server-start.missing params'))
+            if self.b.is_logged_in:
+                yield from self.b.say(msg('set-server-start.missing params'))
+            else:
+                log.error(msg('set-server-start.missing params'))
             return
 
         fmt = '%Y-%m-%d %H:%M:%S'
@@ -94,18 +168,36 @@ concession from http://bbb.hidden-street.net/"""
             london = timezone('Europe/London')
             sampling = london.localize(datetime.strptime(server_datetime, fmt), is_dst=False)
         except ValueError:
-            yield from self.b.say(msg('set-server-start.parsing datetime').format(server_datetime))
+            if self.b.is_logged_in:
+                yield from self.b.say(msg('set-server-start.parsing datetime').format(server_datetime))
+            else:
+                log.error(msg('set-server-start.parsing datetime').format(server_datetime))
             return
 
         try:
             d, h, m, s = [int(s) for s in uptime.split(':')]
         except ValueError:
-            yield from self.b.say(msg('set-server-start.parsing uptime').format(uptime))
+            if self.b.is_logged_in:
+                yield from self.b.say(msg('set-server-start.parsing uptime').format(uptime))
+            else:
+                log.error(msg('set-server-start.parsing uptime').format(uptime))
             return
 
         uptime_delta = timedelta(days=d, hours=h, minutes=m, seconds=s)
         self.server_start = sampling - uptime_delta
-        yield from self.b.say(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
+
+        if self.b.is_logged_in:  # this is to let me use this function also to set server_start in the init phase
+            yield from self.b.say(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
+        else:
+            log.info(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
+
+    @command(name='log-jobs', hidden=True)
+    @asyncio.coroutine
+    def running_jobs(self):
+        log.debug('Scheduled jobs are: ')
+
+        for job in schedule.jobs:
+            log.debug(job)
 
 
 def setup(bot: Bot) -> None:

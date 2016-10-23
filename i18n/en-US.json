@@ -14,5 +14,18 @@
   "set-server-start.parsing uptime": "Error while parsing uptime interval \"{:s}\". \nFormat should be DD:HH:MM:SS",
   "set-server-start.done": "{:s} was set as server start",
   "pierre.date not set": "Server start date is still not set. Use **{command_prefix}set-server-start** command first",
-  "pierre.respawn": "**Pierre will respawn in approximately** {:.0f} hours, {:.0f} minutes and {:.0f} seconds"
+  "pierre.respawn.hms": "**Pierre will respawn in approximately** {h_time:d} {hour:s}, {m_time:d} {minute:s}, {s_time:d} {second:s}",
+  "pierre.respawn.ms":  "**Pierre will respawn in approximately** {m_time:d} {minute:s}, {s_time:d} {second:s}",
+  "pierre.respawn.s": "**Pierre will respawn in approximately** {s_time:d} {second:s}",
+  "pierre.respawn.": "**Pierre will respawn in approximately** now",
+  "pierre.respawn.h": "**Pierre will respawn in approximately** {h_time:d} {hour:s}",
+  "pierre.respawn.hm": "**Pierre will respawn in approximately** {h_time:d} {hour:s}, {m_time:d} {minute:s}",
+  "pierre.respawn.m": "**Pierre will respawn in approximately** {m_time:d} {minute:s}",
+  "pierre.respawn.hs": "**Pierre will respawn in approximately** {h_time:d} {hour:s}, {s_time:d} {second:s}",
+  "time.hour": "hour",
+  "time.hours": "hours",
+  "time.minute": "minute",
+  "time.minutes": "minutes",
+  "time.second": "second",
+  "time.seconds": "seconds"
 }

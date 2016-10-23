@@ -16,7 +16,7 @@ BOT = {
     'description': 'A simple utility bot for MapleRoyals Maple Story server',
     'command_prefix': os.getenv('COMMAND_PREFIX', '!')
 }
-
+SET_SERVER_START_DEFAULT = os.environ.get('SET_SERVER_START_DEFAULT', None)
 
 '''
 Parsing Section
@@ -29,6 +29,7 @@ Logger Section
 '''
 LOGGER_IRONBOT = 'ironbot'
 LOGGER_HIDDENSTREET = 'hiddenstreet'
+LOGGER_SCHEDULER =  'schedule'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -62,6 +63,11 @@ LOGGING = {
             'propagate': True,
         },
         LOGGER_HIDDENSTREET: {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        LOGGER_SCHEDULER: {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
