@@ -2,7 +2,6 @@ import asyncio
 import logging.config
 import schedule
 import settings
-import traceback
 from commons import messages, errors
 from discord import DiscordException
 from discord.ext.commands import Bot, Context
@@ -33,8 +32,7 @@ def main():
         try:
             ironbot.load_extension(ext)
         except Exception as e:
-            log.error('Failed to load extension {}.\n{} - {}'.format(ext, type(e).__name__, e))
-            log.error(traceback.extract_tb())
+            log.exception('Failed to load extension')
 
     @ironbot.event
     @asyncio.coroutine
@@ -42,17 +40,14 @@ def main():
 
         log.info('Logged in as {} id={}'.format(ironbot.user.name, ironbot.user.id))
 
-        log.info('Starting global scheduler')
-        log.debug('Scheduled jobs are: ')
-
+        log.info('Starting global scheduler\nScheduled jobs are:')
         for job in schedule.jobs:
-            log.debug(job)
+            log.info(' * {}'.format(job))
 
     @ironbot.event
     @asyncio.coroutine
     def on_error(event):
-        log.error('An error occurred: {}'.format(event))
-        log.error(traceback.extract_tb())
+        log.error('An error occurred for event "{}"'.format(event))
 
     @ironbot.event
     @asyncio.coroutine

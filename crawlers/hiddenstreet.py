@@ -285,17 +285,16 @@ class HiddenStreet:
     base_url = 'https://www.hidden-street.net'
     base_url_bbb = 'http://bbb.hidden-street.net'
 
-    def __init__(self):
+    def __init__(self, loop):
         self.db = sqlite_db
         self.db.create_tables([Weapon, Monster])
         self.max_bulk_rows = 20
         self.db_refreshing = False
-        self.refresh_data()
+        self.refresh_data(loop)
 
-    def refresh_data(self):
+    def refresh_data(self, loop):
         self.db_refreshing = True
         log.info('refreshing data...')
-        loop = asyncio.get_event_loop()
         semaphore = asyncio.Semaphore(5)
         f = asyncio.wait([last_page(semaphore=semaphore,
                                     server=Server.BEFORE_BIG_BANG,

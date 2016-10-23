@@ -41,22 +41,12 @@ class Maple:
 
     def __init__(self, bot: Bot):
         self.b = bot
-        self.hiddenstreet = HiddenStreet()
+        self.hiddenstreet = HiddenStreet(bot.loop)
         if settings.SET_SERVER_START_DEFAULT is not None:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(self._init_server_start())
-            remaining_respawn_time = self.pierre_next_respawn()
-
-            for interval in (timedelta(minutes=30), timedelta(minutes=20),
-                             timedelta(minutes=10), timedelta(minutes=5)):
-                if remaining_respawn_time > interval:
-                    t = (remaining_respawn_time - interval).total_seconds()
-                else:
-                    t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
-                schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
+            bot.loop.create_task(self._init_server_start())
         else:
+            self.cog_is_initializing = False
             self.server_start = None
-
 
     @catch_exceptions
     def pierre_alert_job(self, first_run=False):
@@ -85,6 +75,7 @@ class Maple:
 
     @asyncio.coroutine
     def _init_server_start(self):
+        self.cog_is_initializing = True
         with aiohttp.ClientSession() as client:
             response = yield from client.get(settings.SET_SERVER_START_DEFAULT)
             args = yield from response.text()
@@ -92,6 +83,7 @@ class Maple:
             log.info('init_server_start: Gotten "{:s}" as default arguments'.format(args))
 
         yield from self.set_server_uptime.callback(self, *args.split())
+        self.cog_is_initializing = False
 
     @command()
     @asyncio.coroutine
@@ -185,18 +177,23 @@ concession from http://bbb.hidden-street.net/"""
         uptime_delta = timedelta(days=d, hours=h, minutes=m, seconds=s)
         self.server_start = sampling - uptime_delta
 
-        if self.b.is_logged_in:  # this is to let me use this function also to set server_start in the init phase
-            yield from self.b.say(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
-        else:
+        if self.cog_is_initializing:  # this is to let me use this function also to set server_start in the init phase
             log.info(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
+        else:
+            yield from self.b.say(msg('set-server-start.done').format(self.server_start.strftime(fmt)))
 
-    @command(name='log-jobs', hidden=True)
-    @asyncio.coroutine
-    def running_jobs(self):
-        log.debug('Scheduled jobs are: ')
+        # Scheduling jobs for automatic Pierre notifications
+        # this is done every time the server time is being adjusted
+        schedule.clear()
+        remaining_respawn_time = self.pierre_next_respawn()
 
-        for job in schedule.jobs:
-            log.debug(job)
+        for interval in (timedelta(minutes=30), timedelta(minutes=20),
+                         timedelta(minutes=10), timedelta(minutes=5)):
+            if remaining_respawn_time > interval:
+                t = (remaining_respawn_time - interval).total_seconds()
+            else:
+                t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
+            schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
 
 
 def setup(bot: Bot) -> None:
