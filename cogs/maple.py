@@ -41,7 +41,7 @@ class Maple:
 
     def __init__(self, bot: Bot):
         self.b = bot
-        # self.hiddenstreet = HiddenStreet()
+        self.hiddenstreet = HiddenStreet()
         if settings.SET_SERVER_START_DEFAULT is not None:
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self._init_server_start())
@@ -54,7 +54,6 @@ class Maple:
                 else:
                     t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
                 schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
-
         else:
             self.server_start = None
 
