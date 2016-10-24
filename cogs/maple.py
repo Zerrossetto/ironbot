@@ -199,6 +199,7 @@ concession from http://bbb.hidden-street.net/"""
                 t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
             schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
 
+
 def setup(bot: Bot) -> None:
     bot.add_cog(Maple(bot))
     log.info('{} cog loaded'.format(__name__))
