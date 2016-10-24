@@ -17,6 +17,7 @@ BOT = {
     'command_prefix': os.getenv('COMMAND_PREFIX', '!')
 }
 SET_SERVER_START_DEFAULT = os.environ.get('SET_SERVER_START_DEFAULT', None)
+SCHEDULER_FREQUENCY = 0.5  # time in seconds
 
 '''
 Parsing Section
@@ -29,7 +30,7 @@ Logger Section
 '''
 LOGGER_IRONBOT = 'ironbot'
 LOGGER_HIDDENSTREET = 'hiddenstreet'
-LOGGER_SCHEDULER =  'schedule'
+LOGGER_SCHEDULER = 'schedule'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -39,10 +40,10 @@ LOGGING = {
                       '%(process)d %(thread)d  %(message)s'
         },
         'timestamped': {
-            'format': '%(asctime)s %(levelname)8s %(name)s  %(message)s'
+            'format': '%(asctime)s %(levelname)8s %(name)8s  %(message)s'
         },
         'simple': {
-            'format': '%(levelname)8s  %(message)s'
+            'format': '%(levelname)s  %(message)s'
         },
         'performance': {
             'format': '%(asctime)s %(process)d | %(thread)d | %(message)s',

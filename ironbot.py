@@ -11,16 +11,24 @@ log = logging.getLogger(settings.LOGGER_IRONBOT)
 
 @asyncio.coroutine
 def scheduler_tick(ironbot: Bot):
+
+    log.info('Global scheduler starting...')
     yield from ironbot.wait_until_ready()
+    log.info('Global scheduler started')
+
+    log.info('Scheduled jobs are:')
+    for job in schedule.jobs:
+        log.info(' * {}: {}'.format(id(job), job))
+
     while not ironbot.is_closed:
         schedule.run_pending()
-        yield from asyncio.sleep(1)
+        yield from asyncio.sleep(settings.SCHEDULER_FREQUENCY, loop=ironbot.loop)
 
 
 def main():
 
     logging.config.dictConfig(settings.LOGGING)
-    log.info('Starting')
+    log.info('Starting application')
     messages.initialize()
     log.debug('Retrieved i18n dictionaries')
     log.debug(messages.msg_map)
@@ -31,7 +39,7 @@ def main():
     for ext in ('cogs.basic', 'cogs.maple'):
         try:
             ironbot.load_extension(ext)
-        except Exception as e:
+        except:
             log.exception('Failed to load extension')
 
     @ironbot.event
@@ -39,10 +47,6 @@ def main():
     def on_ready():
 
         log.info('Logged in as {} id={}'.format(ironbot.user.name, ironbot.user.id))
-
-        log.info('Starting global scheduler\nScheduled jobs are:')
-        for job in schedule.jobs:
-            log.info(' * {}'.format(job))
 
     @ironbot.event
     @asyncio.coroutine
