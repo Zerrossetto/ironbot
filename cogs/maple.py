@@ -41,17 +41,17 @@ class Maple:
 
     def __init__(self, bot: Bot):
 
-        self.cog_is_initializing = True
         self.b = bot
         self.hiddenstreet = HiddenStreet(bot.loop)
 
-        if settings.SET_SERVER_START_DEFAULT is not None:
-            bot.loop.create_task(self._init_server_start())
-        else:
+        if settings.SET_SERVER_START_DEFAULT is None:
             self.server_start = None
             log.warn('Server start wasn\'t set at bot start. Defaulting to None')
-        self.cog_is_initializing = False
+            self.cog_is_initializing = False
+        else:
+            bot.loop.create_task(self._init_server_start())
 
+    @catch_exceptions
     def pierre_alert_job(self, first_run=False):
 
         assert not self.b.is_closed or self.b.is_logged_in, 'Connection to host is closed, skipping execution'
@@ -80,13 +80,14 @@ class Maple:
 
     @asyncio.coroutine
     def _init_server_start(self):
-
+        self.cog_is_initializing = True
         with aiohttp.ClientSession() as client:
             response = yield from client.get(settings.SET_SERVER_START_DEFAULT)
             args = yield from response.text()
             args = args.rstrip()
 
         yield from self.set_server_uptime.callback(self, *args.split())
+        self.cog_is_initializing = False
 
     @command()
     @asyncio.coroutine
@@ -197,7 +198,6 @@ concession from http://bbb.hidden-street.net/"""
             else:
                 t = (remaining_respawn_time + timedelta(hours=4) + interval).total_seconds()
             schedule.every(t).seconds.do(self.pierre_alert_job, first_run=True)
-
 
 def setup(bot: Bot) -> None:
     bot.add_cog(Maple(bot))
