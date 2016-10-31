@@ -1,0 +1,14 @@
+language: python
+
+python:
+    - "3.5"
+
+install:
+    - pip install pytest-cov
+    - pip install pytest-pep8
+    - pip install coveralls
+
+script: py.test test_ironbot.py --pep8 schedule -v --cov schedule --cov-report term-missing
+
+after_success:
+- coveralls
