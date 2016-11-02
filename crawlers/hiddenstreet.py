@@ -220,7 +220,7 @@ def last_page(server, subsection, semaphore, category=None, *args, **argv):
     m = 'last_page'
     with (yield from semaphore):
         with ClientSession() as client:
-            log.info('({}) client {}: connecting to url {}'.format(m, id(client), url))
+            log.debug('({}) client {}: connecting to url {}'.format(m, id(client), url))
             response = yield from client.get(url, compress=True)
             log.debug('({}) client {}: got {} for url {}'.format(m, id(client), response.status, url))
             resp_status = response.status
@@ -253,13 +253,13 @@ def scrape(server, subsection, semaphore, model,
     m = 'scrape'
     with (yield from semaphore):
         with ClientSession() as client:
-            log.info('({}) client {}: connecting to url {}'.format(m, id(client), url))
+            log.debug('({}) client {}: connecting to url {}'.format(m, id(client), url))
             response = yield from client.get(url, compress=True)
             log.debug('({}) client {}: got {:d} for url {}'.format(m, id(client), response.status, url))
             resp_status = response.status
             if response.status == 200:
                 page = yield from response.text()
-            log.info('({}) client {}: connection to url {} closed'.format(m, id(client), url))
+            log.debug('({}) client {}: connection to url {} closed'.format(m, id(client), url))
 
     if resp_status != 200:
         if category is None:

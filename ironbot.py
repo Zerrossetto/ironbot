@@ -1,28 +1,11 @@
 import asyncio
 import logging.config
-import schedule
 import settings
-from commons import messages, errors
+from commons import messages, errors, utils
 from discord import DiscordException
 from discord.ext.commands import Bot, Context
 
 log = logging.getLogger(settings.LOGGER_IRONBOT)
-
-
-@asyncio.coroutine
-def scheduler_tick(ironbot: Bot):
-
-    log.info('Global scheduler starting...')
-    yield from ironbot.wait_until_ready()
-    log.info('Global scheduler started')
-
-    log.info('Scheduled jobs are:')
-    for job in schedule.jobs:
-        log.info(' * {}: {}'.format(id(job), job))
-
-    while not ironbot.is_closed:
-        schedule.run_pending()
-        yield from asyncio.sleep(settings.SCHEDULER_FREQUENCY, loop=ironbot.loop)
 
 
 def main():
@@ -63,7 +46,7 @@ def main():
         else:
             log.warn('Unhandled command error: {}'.format(error))
 
-    ironbot.loop.create_task(scheduler_tick(ironbot))
+    ironbot.loop.create_task(utils.scheduler_tick(ironbot))
     ironbot.run(settings.DISCORD_TOKEN)
 
 

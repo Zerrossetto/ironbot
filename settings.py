@@ -16,8 +16,9 @@ BOT = {
     'description': 'A simple utility bot for MapleRoyals Maple Story server',
     'command_prefix': os.getenv('COMMAND_PREFIX', '!')
 }
-SET_SERVER_START_DEFAULT = os.environ.get('SET_SERVER_START_DEFAULT', None)
+SET_SERVER_START_DEFAULT = os.getenv('SET_SERVER_START_DEFAULT', None)
 SCHEDULER_FREQUENCY = 0.5  # time in seconds
+HEARTBEAT_FILE = os.getenv('HEARTBEAT_FILE', '/tmp/ironbot-heartbeat')
 
 '''
 Parsing Section
