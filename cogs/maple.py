@@ -160,6 +160,7 @@ are events only, and thus not available for searching."""
             yield from self.b.say(msg('maple_weapons_info.too many').format(**settings.BOT))
         else:
             log.debug('gotten {} records from backend'.format(len(result)))
+            library_link = 'https://mapleroyals.com/library/?page=items&id={}'
             img_template = 'https://mapleroyals.com/library/images/item/{:08d}.png'
             for maple_weapon in result:
                 log.debug(maple_weapon)
@@ -168,6 +169,7 @@ are events only, and thus not available for searching."""
                     d['magic_attack_string'] = ' **Magic Attack** ' + maple_weapon.magic_attack
                 else:
                     d['magic_attack_string'] = ''
+                d['library_link'] = img_template.format(maple_weapon.id_weapon)
                 d['image_link'] = img_template.format(int(maple_weapon.id_weapon))
                 yield from self.b.say(msg('maple_weapons_info.result').format(**d))
 
