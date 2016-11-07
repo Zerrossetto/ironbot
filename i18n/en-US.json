@@ -31,7 +31,7 @@
   "maple_weapons_info.pyrope": "Maple Pyrope Weapons are Events only, and thus not normally available in game.",
   "maple_weapons_info.no results": "No result for keyword \"{keyword}\". Type {command_prefix}maple for a complete list of all the Maple Weapons available in game.",
   "maple_weapons_info.too many": "Type {command_prefix}maplelist for a complete list of all the Maple Weapons available in game.",
-  "maple_weapons_info.result": "***{name}*** (*{required_level}*)\n**Weapon Attack** {weapon_attack}{magic_attack_string}\n**Effects** *{effects}*\n**Dropped by** {dropped_by}\n{image_link}",
+  "maple_weapons_info.result": "***{name}*** (*{required_level}*)\n**Weapon Attack** {weapon_attack}{magic_attack_string}\n**Effects** *{effects}*\n**Dropped by** {dropped_by}\n{library_link}\n{image_link}",
   "maple_list_info.result": "***Level {required_level}***\n{names}"
 
 }
