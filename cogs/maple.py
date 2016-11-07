@@ -174,7 +174,7 @@ are events only, and thus not available for searching."""
     @command(name='maplelist')
     @asyncio.coroutine
     def maple_list_info(self, weapon_level: int=None):
-        """Prints a simple list for all the Maple Weapons currently available in game"""
+        """Prints a simple list for all the Maple Weapons currently available in game."""
 
         result = self.hiddenstreet.maple_list_by_level(weapon_level)
 
