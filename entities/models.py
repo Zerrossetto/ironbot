@@ -71,3 +71,22 @@ class Monster(BaseModel):
     immune_against_status = peewee.TextField(null=True)
     inflict_status = peewee.TextField(null=True)
     common_location = peewee.TextField(null=True)
+
+
+class MapleWeapon(BaseModel):
+    id_weapon = peewee.PrimaryKeyField()
+    name = peewee.TextField()
+    weapon_type = peewee.TextField()
+    required_level = peewee.TextField(null=True)
+    required_stats = peewee.TextField(null=True)
+    weapon_attack = peewee.TextField(null=True)
+    magic_attack = peewee.TextField(null=True)
+    attack_speed = peewee.TextField(null=True)
+    job = peewee.TextField()
+    effects = peewee.TextField(null=True)
+    available_upgrades = peewee.TextField(null=True)
+    sold_for = peewee.TextField()
+    description = peewee.TextField(null=True)
+    dropped_by = peewee.TextField(null=True)
+    available_from = peewee.TextField(null=True)
+    remarks = peewee.TextField(null=True)
