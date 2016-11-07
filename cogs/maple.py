@@ -169,8 +169,8 @@ are events only, and thus not available for searching."""
                     d['magic_attack_string'] = ' **Magic Attack** ' + maple_weapon.magic_attack
                 else:
                     d['magic_attack_string'] = ''
-                d['library_link'] = img_template.format(maple_weapon.id_weapon)
-                d['image_link'] = img_template.format(int(maple_weapon.id_weapon))
+                d['library_link'] = library_link.format(maple_weapon.id_weapon)
+                d['image_link'] = img_template.format(maple_weapon.id_weapon)
                 yield from self.b.say(msg('maple_weapons_info.result').format(**d))
 
     @command(name='maplelist')
