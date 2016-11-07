@@ -295,7 +295,7 @@ class HiddenStreet:
         self.db.create_tables([Weapon, Monster, MapleWeapon])
         self.max_bulk_rows = 20
         self.db_refreshing = False
-        # self.refresh_data(loop)
+        self.refresh_data(loop)
 
         maple_weapons = []
         with open(os.path.join(os.path.dirname(__file__), 'mapleweapons.csv')) as csvfile:
@@ -368,12 +368,8 @@ class HiddenStreet:
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
 
-        return MapleWeapon.select() \
-                          .where(functools.reduce(operator.or_,
-                                                  [(MapleWeapon.name ** '%{}%'.format(keyw))
-                                                   for keyw in weapon_name_terms])
-                                 ) \
-                          .execute()
+        clauses = [(MapleWeapon.name ** '%{}%'.format(term)) for term in weapon_name_terms]
+        return MapleWeapon.select().where(functools.reduce(operator.or_, clauses)).execute()
 
     def maple_list_by_level(self, weapon_level: int=None):
 
