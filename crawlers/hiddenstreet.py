@@ -1,12 +1,15 @@
 import asyncio
+import csv
 import logging
+import os
 import itertools
+import peewee
 import settings
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from typing import Optional, Generic
-from entities.models import sqlite_db, Weapon, Monster
+from entities.models import sqlite_db, Weapon, Monster, MapleWeapon
 from entities.enums import MonsterLevelType, Section, Server, UrlElement
 
 log = logging.getLogger(settings.LOGGER_HIDDENSTREET)
@@ -287,10 +290,23 @@ class HiddenStreet:
 
     def __init__(self, loop):
         self.db = sqlite_db
-        self.db.create_tables([Weapon, Monster])
+        self.db.create_tables([Weapon, Monster, MapleWeapon])
         self.max_bulk_rows = 20
         self.db_refreshing = False
-        self.refresh_data(loop)
+        # self.refresh_data(loop)
+
+        maple_weapons = []
+        with open(os.path.join(os.path.dirname(__file__), 'mapleweapons.csv')) as csvfile:
+            list_reader = csv.DictReader(csvfile)
+            for weapon in list_reader:
+                maple_weapons.append(weapon)
+
+        with self.db.atomic():
+            for i in range(0, len(maple_weapons), self.max_bulk_rows):
+                top = i + self.max_bulk_rows
+                MapleWeapon.insert_many(maple_weapons[i:top]).execute()
+                if len(maple_weapons) == 0:
+                    log.warn('empty result set for maple weapons')
 
     def refresh_data(self, loop):
         self.db_refreshing = True
@@ -330,9 +346,7 @@ class HiddenStreet:
             for result, category in [task.result() for task in finished]:
                 for i in range(0, len(result), self.max_bulk_rows):
                     top = i + self.max_bulk_rows
-                    type(category).related_model() \
-                        .insert_many(result[i:top]) \
-                        .execute()
+                    type(category).related_model().insert_many(result[i:top]).execute()
                 if len(result) == 0:
                     log.warn('empty result set for {} category'.format(category))
 
@@ -347,6 +361,30 @@ class HiddenStreet:
 
         q = Monster.select().where(Monster.name ** keyw)
         return q.execute()
+
+    def maple_weapon_by_name(self, weapon_name):
+        if self.db_refreshing:
+            raise ValueError('Database refresh in progress')
+
+        keyw = '%{}%'.format(weapon_name)
+
+        return MapleWeapon.select().where(MapleWeapon.name ** keyw).execute()
+
+    def maple_list_by_level(self, weapon_level=None):
+        if self.db_refreshing:
+            raise ValueError('DATABASE DATABASE REFRESHING THE DATABASE')
+
+        sq = (MapleWeapon
+              .select(MapleWeapon.required_level,
+                      peewee.fn.group_concat(MapleWeapon.name, ', ')
+                            .alias('names')))
+
+        if weapon_level:
+            sq = sq.where(MapleWeapon.required_level == weapon_level)
+
+        sq = sq.group_by(MapleWeapon.required_level)
+
+        return sq.execute()
 
 
 if __name__ == '__main__':
