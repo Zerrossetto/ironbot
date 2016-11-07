@@ -295,7 +295,7 @@ class HiddenStreet:
         self.db.create_tables([Weapon, Monster, MapleWeapon])
         self.max_bulk_rows = 20
         self.db_refreshing = False
-        # self.refresh_data(loop)
+        self.refresh_data(loop)
 
         maple_weapons = []
         with open(os.path.join(os.path.dirname(__file__), 'mapleweapons.csv')) as csvfile:
