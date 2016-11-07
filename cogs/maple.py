@@ -143,33 +143,24 @@ concession from http://bbb.hidden-street.net/"""
 
     @command(name='maple')
     @asyncio.coroutine
-    def maple_weapons_info(self, weapon_name: str):
+    def maple_weapons_info(self, *search_terms):
         """Finds stats and drop locations for a Maple Weapon. Please note that level 77 Maple Pyrope Weapons \
 are events only, and thus not available for searching."""
 
-        if "pyrope" in weapon_name.lower():
-            yield from self.b.say('Maple Pyrope Weapons are Events only, and thus not normally available in game.')
+        if any(['pyrope' in keyword.lower() for keyword in search_terms]):
+            yield from self.b.say(msg('maple_weapons_info.pyrope'))
             return
 
-        result = self.hiddenstreet.maple_weapon_by_name(weapon_name)
+        result = self.hiddenstreet.maple_weapon_by_name(search_terms)
 
         if len(result) == 0:
-            yield from self.b.say('No result for keyword "{}". Type !maplelist for a complete list of all the Maple '
-                                  'Weapons available in game. '.format(weapon_name))
-            return
+            yield from self.b.say(msg('maple_weapons_info.no results').format(keyword=' '.join(search_terms),
+                                                                              **settings.BOT))
         elif len(result) > 3:
-            yield from self.b.say('Type !maplelist '
-                                  'for a complete list of all the Maple Weapons '
-                                  'available in game.')
-            return
-
+            yield from self.b.say(msg('maple_weapons_info.too many').format(**settings.BOT))
         else:
-            tpl = '***{name}*** (*{required_level}*)\n' \
-                  '**Weapon Attack** {weapon_attack}{magic_attack_string}\n' \
-                  '**Effects** *{effects}*\n' \
-                  '**Dropped by** {dropped_by}\n' \
-                  '{link}'
             log.debug('gotten {} records from backend'.format(len(result)))
+            img_template = 'https://mapleroyals.com/library/images/item/{:08d}.png'
             for maple_weapon in result:
                 log.debug(maple_weapon)
                 d = maple_weapon.to_dict
@@ -177,22 +168,20 @@ are events only, and thus not available for searching."""
                     d['magic_attack_string'] = ' **Magic Attack** ' + maple_weapon.magic_attack
                 else:
                     d['magic_attack_string'] = ''
-                d['link'] = 'https://mapleroyals.com/library/images/item/{:08d}.png'.format(int(maple_weapon.id_weapon))
-                yield from self.b.say(tpl.format(**d))
+                d['image_link'] = img_template.format(int(maple_weapon.id_weapon))
+                yield from self.b.say(msg('maple_weapons_info.result').format(**d))
 
     @command(name='maplelist')
     @asyncio.coroutine
-    def maple_list_info(self, weapon_level=None):
+    def maple_list_info(self, weapon_level: int=None):
         """Prints a simple list for all the Maple Weapons currently available in game"""
-        result = self.hiddenstreet.maple_list_by_level(weapon_level)
 
-        tpl = '***Level {required_level}***\n' \
-              '{names}'
+        result = self.hiddenstreet.maple_list_by_level(weapon_level)
 
         log.debug('gotten {} records from backend'.format(len(result)))
         for w in result:
-            log.debug(w.names)
-            yield from self.b.say(tpl.format(required_level=w.required_level, names=w.names))
+            yield from self.b.say(msg('maple_list_info.result').format(required_level=w.required_level,
+                                                                       names=w.names))
 
     @command(name='set-server-start', hidden=True)
     @check(checks.is_admin)

@@ -1,6 +1,8 @@
 import asyncio
 import csv
+import functools
 import logging
+import operator
 import os
 import itertools
 import peewee
@@ -362,28 +364,32 @@ class HiddenStreet:
         q = Monster.select().where(Monster.name ** keyw)
         return q.execute()
 
-    def maple_weapon_by_name(self, weapon_name):
+    def maple_weapon_by_name(self, *weapon_name_terms):
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
 
-        keyw = '%{}%'.format(weapon_name)
+        return MapleWeapon.select() \
+                          .where(functools.reduce(operator.or_,
+                                                  [(MapleWeapon.name ** '%{}%'.format(keyw))
+                                                   for keyw in weapon_name_terms])
+                                 ) \
+                          .execute()
 
-        return MapleWeapon.select().where(MapleWeapon.name ** keyw).execute()
+    def maple_list_by_level(self, weapon_level: int=None):
 
-    def maple_list_by_level(self, weapon_level=None):
         if self.db_refreshing:
             raise ValueError('DATABASE DATABASE REFRESHING THE DATABASE')
 
         sq = (MapleWeapon
               .select(MapleWeapon.required_level,
-                      peewee.fn.group_concat(MapleWeapon.name, ', ')
-                            .alias('names')))
+                      peewee.fn.group_concat(MapleWeapon.name, ', ').alias('names')
+                      )
+              )
 
-        if weapon_level:
+        if weapon_level is None:
             sq = sq.where(MapleWeapon.required_level == weapon_level)
 
         sq = sq.group_by(MapleWeapon.required_level)
-
         return sq.execute()
 
 
