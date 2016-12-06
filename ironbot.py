@@ -45,7 +45,7 @@ def main():
             yield from ctx.bot.send_message(ctx.message.channel, errors.get(*k))
         else:
             log.warn('Unhandled command error: {}'.format(error))
-
+    # useless comment
     ironbot.loop.create_task(utils.scheduler_tick(ironbot))
     ironbot.run(settings.DISCORD_TOKEN)
 
