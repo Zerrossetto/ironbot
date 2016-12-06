@@ -6,4 +6,4 @@ lxml==3.6.4
 peewee==2.8.5
 websockets==3.2
 pytz==2016.7
-schedule==0.3.2
+schedule==0.4.2
