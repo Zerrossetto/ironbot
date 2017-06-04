@@ -372,7 +372,9 @@ class HiddenStreet:
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
 
-        clauses = [(MapleWeapon.name ** '%{}%'.format(term)) for term in weapon_name_terms]
+        clauses = []
+        for clause in ('% {} %', '% {}', '{} %', '{}'):
+            clauses += [(MapleWeapon.name ** clause.format(term)) for term in weapon_name_terms]
         return MapleWeapon.select().where(functools.reduce(operator.or_, clauses)).execute()
 
     def maple_list_by_level(self, weapon_level: int=None):
