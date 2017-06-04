@@ -371,7 +371,7 @@ class HiddenStreet:
 
         clauses = []
         for clause in ('% {} %', '% {}', '{} %', '{}'):
-            clauses += [(MapleWeapon.name ** clause.format(term))
+            clauses += [(entity_model.name ** clause.format(term))
                         for term in map(lambda s: s.replace('*', '%'), search_terms)]
 
         query = entity_model.select().where(functools.reduce(operator.or_, clauses))

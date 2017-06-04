@@ -146,7 +146,7 @@ are events only, and thus not available for searching."""
         #    yield from self.b.say(msg('maple_weapons_info.pyrope'))
         #    return
 
-        result = self.hiddenstreet.maple_weapon_by_name(*search_terms)
+        result = self.hiddenstreet.maple_weapon_by_name(search_terms)
 
         if len(result) == 0:
             yield from self.b.say(msg('maple_weapons_info.no results').format(keyword=' '.join(search_terms),
