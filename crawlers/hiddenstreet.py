@@ -372,13 +372,12 @@ class HiddenStreet:
 
         full_name = " ".join(map(lambda s: s.replace('*', '')
                                             .replace('%', '')
-                                            .strip()
-                                            .lower(),
+                                            .strip(),
                                  search_terms)
                              )
 
         try:
-            return tuple(entity_model.get(entity_model.name == full_name))
+            return tuple(entity_model.get(entity_model.name ** full_name))
         except peewee.DoesNotExist:
             log.debug('Exact match for word "{}" not found, continuing'.format(full_name))
 
