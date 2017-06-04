@@ -147,7 +147,7 @@ concession from http://bbb.hidden-street.net/"""
         """Finds stats and drop locations for a Maple Weapon. Please note that level 77 Maple Pyrope Weapons \
 are events only, and thus not available for searching."""
 
-        #if any(['pyrope' in keyword.lower() for keyword in search_terms]):
+        # if any(['pyrope' in keyword.lower() for keyword in search_terms]):
         #    yield from self.b.say(msg('maple_weapons_info.pyrope'))
         #    return
 
