@@ -366,8 +366,21 @@ class HiddenStreet:
         return self._search_by_name(MapleWeapon, weapon_name_terms)
 
     def _search_by_name(self, entity_model, search_terms):
+
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
+
+        full_name = " ".join(map(lambda s: s.replace('*', '')
+                                            .replace('%', '')
+                                            .strip()
+                                            .lower(),
+                                 search_terms)
+                             )
+
+        try:
+            return tuple(entity_model.get(entity_model.name == full_name))
+        except peewee.DoesNotExist:
+            log.debug('Exact match for word "{}" not found, continuing'.format(full_name))
 
         clauses = []
         for clause in ('% {} %', '% {}', '{} %', '{}'):
@@ -375,13 +388,7 @@ class HiddenStreet:
                         for term in map(lambda s: s.replace('*', '%'), search_terms)]
 
         query = entity_model.select().where(functools.reduce(operator.or_, clauses))
-        results = query.execute()
-
-        # If full name matches completely then only the matching result is returned
-        try:
-            return results[[e.name for e in results].index(" ".join(search_terms))]
-        except ValueError:
-            return results
+        return query.execute()
 
     def maple_list_by_level(self, weapon_level: int=None):
 
