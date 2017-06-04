@@ -359,23 +359,23 @@ class HiddenStreet:
         self.db_refreshing = False
         log.info('refreshing data... done')
 
-    def monsters_by_name(self, monster_name: str, exact_match: bool=False):
-        if self.db_refreshing:
-            raise ValueError('Database refresh in progress')
+    def monsters_by_name(self, monster_name_terms):
+        return self._search_by_name(Monster, monster_name_terms)
 
-        keyw = monster_name if exact_match else '%{}%'.format(monster_name)
+    def maple_weapon_by_name(self, weapon_name_terms):
+        return self._search_by_name(MapleWeapon, weapon_name_terms)
 
-        q = Monster.select().where(Monster.name ** keyw)
-        return q.execute()
-
-    def maple_weapon_by_name(self, *weapon_name_terms):
+    def _search_by_name(self, entity_model, search_terms):
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
 
         clauses = []
         for clause in ('% {} %', '% {}', '{} %', '{}'):
-            clauses += [(MapleWeapon.name ** clause.format(term)) for term in weapon_name_terms]
-        return MapleWeapon.select().where(functools.reduce(operator.or_, clauses)).execute()
+            clauses += [(MapleWeapon.name ** clause.format(term))
+                        for term in map(lambda s: s.replace('*', '%'), search_terms)]
+
+        query = entity_model.select().where(functools.reduce(operator.or_, clauses))
+        return query.execute()
 
     def maple_list_by_level(self, weapon_level: int=None):
 

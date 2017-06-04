@@ -112,17 +112,12 @@ class Maple:
 
     @command(name='mobstats')
     @asyncio.coroutine
-    def monster_stats(self, *words):
+    def monster_stats(self, *search_terms):
         """Finds stats for a monster put --exact (or -e for short) to \
 have the exact match for the name you're looking for. Data is by kind \
 concession from http://bbb.hidden-street.net/"""
-        flag = words[0] in ['--exact', '-e']
-        if flag:
-            name = ' '.join(words[1:])
-        else:
-            name = ' '.join(words)
 
-        result = self.hiddenstreet.monsters_by_name(name, exact_match=flag)
+        result = self.hiddenstreet.monsters_by_name(search_terms)
         if len(result) == 0:
             yield from self.b.say(msg('monster_stats.no results').format(name))
         elif len(result) > 3:
