@@ -375,7 +375,13 @@ class HiddenStreet:
                         for term in map(lambda s: s.replace('*', '%'), search_terms)]
 
         query = entity_model.select().where(functools.reduce(operator.or_, clauses))
-        return query.execute()
+        results = query.execute()
+
+        # If full name matches completely then only the matching result is returned
+        try:
+            return results[[e.name for e in results].index(" ".join(search_terms))]
+        except ValueError:
+            return results
 
     def maple_list_by_level(self, weapon_level: int=None):
 
