@@ -377,7 +377,8 @@ class HiddenStreet:
                              )
 
         try:
-            return tuple(entity_model.get(entity_model.name ** full_name))
+            match = entity_model.get(entity_model.name ** full_name)
+            return [match]
         except peewee.DoesNotExist:
             log.debug('Exact match for word "{}" not found, continuing'.format(full_name))
 
