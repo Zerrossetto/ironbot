@@ -33,7 +33,7 @@ def main():
 
     @ironbot.event
     @asyncio.coroutine
-    def on_error(event):
+    def on_error(event, *args, **kwargs):
         log.error('An error occurred for event "{}"'.format(event))
 
     @ironbot.event

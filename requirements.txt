@@ -1,9 +1,9 @@
-aiohttp==1.0.5
-beautifulsoup4==4.5.1
-chardet==2.3.0
-discord.py==0.13.0
+aiohttp==2.1.0
+beautifulsoup4==4.6.0
+chardet==3.0.3
+discord.py==0.16.6
 lxml==3.6.4
-peewee==2.8.5
-websockets==3.2
-pytz==2016.7
+peewee==2.10.1
+websockets==3.3
+pytz==2017.2
 schedule==0.4.2
