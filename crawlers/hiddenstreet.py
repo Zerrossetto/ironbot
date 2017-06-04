@@ -1,6 +1,8 @@
 import asyncio
 import csv
+import functools
 import logging
+import operator
 import os
 import itertools
 import peewee
@@ -293,7 +295,7 @@ class HiddenStreet:
         self.db.create_tables([Weapon, Monster, MapleWeapon])
         self.max_bulk_rows = 20
         self.db_refreshing = False
-        # self.refresh_data(loop)
+        self.refresh_data(loop)
 
         maple_weapons = []
         with open(os.path.join(os.path.dirname(__file__), 'mapleweapons.csv')) as csvfile:
@@ -362,28 +364,28 @@ class HiddenStreet:
         q = Monster.select().where(Monster.name ** keyw)
         return q.execute()
 
-    def maple_weapon_by_name(self, weapon_name):
+    def maple_weapon_by_name(self, *weapon_name_terms):
         if self.db_refreshing:
             raise ValueError('Database refresh in progress')
 
-        keyw = '%{}%'.format(weapon_name)
+        clauses = [(MapleWeapon.name ** '%{}%'.format(term)) for term in weapon_name_terms]
+        return MapleWeapon.select().where(functools.reduce(operator.or_, clauses)).execute()
 
-        return MapleWeapon.select().where(MapleWeapon.name ** keyw).execute()
+    def maple_list_by_level(self, weapon_level: int=None):
 
-    def maple_list_by_level(self, weapon_level=None):
         if self.db_refreshing:
             raise ValueError('DATABASE DATABASE REFRESHING THE DATABASE')
 
         sq = (MapleWeapon
               .select(MapleWeapon.required_level,
-                      peewee.fn.group_concat(MapleWeapon.name, ', ')
-                            .alias('names')))
+                      peewee.fn.group_concat(MapleWeapon.name, ', ').alias('names')
+                      )
+              )
 
-        if weapon_level:
+        if weapon_level is not None:
             sq = sq.where(MapleWeapon.required_level == weapon_level)
 
         sq = sq.group_by(MapleWeapon.required_level)
-
         return sq.execute()
 
 
