@@ -346,9 +346,13 @@ class HiddenStreet:
 
         with self.db.atomic():
             for result, category in [task.result() for task in finished]:
+
+                model = type(category).related_model()
+
                 for i in range(0, len(result), self.max_bulk_rows):
                     top = i + self.max_bulk_rows
-                    type(category).related_model().insert_many(result[i:top]).execute()
+                    model.insert_many(result[i:top]).execute()
+
                 if len(result) == 0:
                     log.warn('empty result set for {} category'.format(category))
 
