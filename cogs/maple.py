@@ -126,8 +126,8 @@ concession from http://bbb.hidden-street.net/"""
         if len(result) == 0:
             yield from self.b.say(msg('monster_stats.no results').format(name))
         elif len(result) > 3:
-            n = '", "'.join([m.name for m in result])
-            yield from self.b.say(msg('monster_stats.too many').format(n))
+            mlist = '"' + '", "'.join([m.name for m in result]) + '"'
+            yield from self.b.say(msg('monster_stats.too many').format(monster_list=mlist))
         else:
 
             for monster in result:
@@ -157,7 +157,8 @@ are events only, and thus not available for searching."""
             yield from self.b.say(msg('maple_weapons_info.no results').format(keyword=' '.join(search_terms),
                                                                               **settings.BOT))
         elif len(result) > 3:
-            yield from self.b.say(msg('maple_weapons_info.too many').format(**settings.BOT))
+            wlist = '"' + '", "'.join([w.name for w in result]) + '"'
+            yield from self.b.say(msg('maple_weapons_info.too many').format(weapon_list=wlist, **settings.BOT))
         else:
             log.debug('gotten {} records from backend'.format(len(result)))
             library_link = 'https://mapleroyals.com/library/?page=items&id={}'
