@@ -1,8 +1,8 @@
 aiohttp==2.1.0
 beautifulsoup4==4.6.0
 chardet==3.0.3
-discord.py==0.16.6
-lxml==3.6.4
+discord.py==0.16.8
+lxml==3.8.0
 peewee==2.10.1
 websockets==3.3
 pytz==2017.2
