@@ -7,7 +7,7 @@ import os
 import itertools
 import peewee
 import settings
-from aiohttp import ClientSession
+from aiohttp import ClientSession, TCPConnector
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from typing import Optional, Generic
@@ -224,7 +224,7 @@ def last_page(server, subsection, semaphore, category=None, *args, **argv):
     url = build_url(server=server, subsection=subsection, category=category, *args, **argv)
     m = 'last_page'
     with (yield from semaphore):
-        with ClientSession() as client:
+        with ClientSession(connector=TCPConnector(verify_ssl=False)) as client:
             log.debug('({}) client {}: connecting to url {}'.format(m, id(client), url))
             response = yield from client.get(url, compress=True)
             log.debug('({}) client {}: got {} for url {}'.format(m, id(client), response.status, url))
@@ -257,7 +257,7 @@ def scrape(server, subsection, semaphore, model,
     result = []
     m = 'scrape'
     with (yield from semaphore):
-        with ClientSession() as client:
+        with ClientSession(connector=TCPConnector(verify_ssl=False)) as client:
             log.debug('({}) client {}: connecting to url {}'.format(m, id(client), url))
             response = yield from client.get(url, compress=True)
             log.debug('({}) client {}: got {:d} for url {}'.format(m, id(client), response.status, url))
